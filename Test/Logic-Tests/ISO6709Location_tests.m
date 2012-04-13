@@ -60,4 +60,10 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
    STAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ), nil );
 }
 
+- (void)test_stringWithoutSlash_parsesToInvalidCoordinate
+{
+   const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+00.0000+000.0000" );
+   STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
+}
+
 @end
