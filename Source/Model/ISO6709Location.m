@@ -10,9 +10,9 @@
 #import "ISO6709Location.h"
 
 
-// +DD.DDDD+DDD.DDDD/ (eg +12.345-098.765/)
+// +DD.DDDD+DDD.DDDD/ (eg +12.3450-098.7650/)
 static NSString* const _degreeDegreeFormat = @"%+08.4f%+09.4f/";
-
+static const NSUInteger _minimumStringLength = 18u;
 
 NSString* ISO6709Location_stringFromCoordinate( 
    CLLocationCoordinate2D coordinate 
@@ -33,6 +33,12 @@ CLLocationCoordinate2D ISO6709Location_coordinateFromString(
    NSString* locationString 
 )
 {
-   // !!!: implement me
-   return kCLLocationCoordinate2DInvalid;
+   CLLocationCoordinate2D location = kCLLocationCoordinate2DInvalid;
+
+   if ( locationString.length >= _minimumStringLength )
+   {
+      location = CLLocationCoordinate2DMake( 0., 0. );
+   }
+   
+   return location;
 }

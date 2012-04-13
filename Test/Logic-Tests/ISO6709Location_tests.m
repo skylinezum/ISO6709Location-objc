@@ -9,30 +9,36 @@
 #import <SenTestingKit/SenTestingKit.h>
 
 
-@interface ISO6709Location_tests : SenTestCase
-@end
+static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate2D b )
+{
+   return a.latitude == b.latitude && a.longitude == b.longitude;
+}
 
 
 #pragma mark -
 
 
+@interface ISO6709Location_tests : SenTestCase
+@end
+
+
 @implementation ISO6709Location_tests
 
-#pragma mark Synthesis Tests
-- (void)test_invalidCoordinate_isNilString
+#pragma mark String Generation Tests
+- (void)test_invalidCoordinate_generatesNilString
 {
    NSString* const locationString = ISO6709Location_stringFromCoordinate( kCLLocationCoordinate2DInvalid );
    STAssertNil( locationString, nil );
 }
 
-- (void)test_zeroCoordinate_hasExpectedString
+- (void)test_zeroCoordinate_generatesZeroString
 {
-   const CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake( .0, .0 );
+   const CLLocationCoordinate2D coordinate = { 0 };
    NSString* const locationString = ISO6709Location_stringFromCoordinate( coordinate );
    STAssertEqualObjects( locationString, @"+00.0000+000.0000/", nil );
 }
 
-- (void)test_typicalCoordinate_hasTypicalString
+- (void)test_typicalCoordinate_generatesTypicalString
 {
    const CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake( 12.345, -98.765 );
    NSString* const locationString = ISO6709Location_stringFromCoordinate( coordinate );
@@ -40,11 +46,18 @@
 }
 
 
-#pragma mark Parsing Tests
-- (void)test_nilString_isInvalidCoordinate
+#pragma mark String Parsing Tests
+- (void)test_nilString_parsesToInvalidCoordinate
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( nil );
    STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
+}
+
+- (void)test_zeroString_parsesToZeroCoordinate
+{
+   const CLLocationCoordinate2D parsedCoordinate = ISO6709Location_coordinateFromString( @"+00.0000+000.0000/" );
+   const CLLocationCoordinate2D expectedCoordinate = { 0 };
+   STAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ), nil );
 }
 
 @end
