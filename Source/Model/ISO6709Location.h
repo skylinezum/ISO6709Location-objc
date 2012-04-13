@@ -1,8 +1,10 @@
 //
 //  ISO6709Location.h
 //
-//  Created by Otto on 4/13/12.
-//  Copyright (c) 2012 TechSmith. All rights reserved.
+//  Created by Otto Schnurr on 4/13/12.
+//  Copyright 2012
+//
+//  Cocoa functions for creating and parsing an ISO 6709 coordinate string.
 //
 
 #import <CoreLocation/CLLocation.h>
@@ -15,6 +17,7 @@ NSString* ISO6709Location_stringFromCoordinate(
 );
 
 // Returns kCLLocationCoordinate2DInvalid for an invalid string.
+// Use CLLocationCoordinate2DIsValid() to test validity.
 CLLocationCoordinate2D ISO6709Location_coordinateFromString( 
    NSString* locationString 
 );
