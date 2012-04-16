@@ -9,6 +9,8 @@
 
 #import "ISO6709Location.h"
 #import <Foundation/NSCharacterSet.h>
+#import <Foundation/NSIndexSet.h>
+#import <Foundation/NSScanner.h>
 
 
 // +DD.DDDD+DDD.DDDD/ (eg +12.3450-098.7650/)
@@ -32,148 +34,161 @@ NSString* ISO6709Location_stringFromCoordinate(
 
 #pragma mark -
 
-// Returns zero length on failure.
-static NSRange _scanNextWord( NSString* locationString, NSRange previousWord )
-{
-   NSRange word = NSMakeRange( previousWord.location + previousWord.length, 0u );
 
-   if ( word.location + word.length < locationString.length )
+static NSIndexSet* _findDelimiters( NSString* locationString )
+{
+   NSMutableIndexSet* indices = nil;
+   const NSRange stringRange = NSMakeRange( 0u, locationString.length );
+   
+   if ( stringRange.length )
    {
-      NSCharacterSet* const delimiters = 
-         [NSCharacterSet characterSetWithCharactersInString: @"+-/"];
-      const unichar firstCharacter = 
-         [locationString characterAtIndex: word.location + word.length];
+      const NSUInteger bufferLength = stringRange.length * sizeof( unichar );
+      NSMutableData* data = [NSMutableData dataWithLength: bufferLength];
+      unichar* characters = data.mutableBytes;
       
-      // Each valid word starts with a delimiter.
-      if ( [delimiters characterIsMember: firstCharacter] )
+      if ( characters )
       {
-         word.length++;
-      
-         while ( word.location + word.length < locationString.length )
+         indices = [NSMutableIndexSet indexSet];
+         [locationString getCharacters: characters range: stringRange];
+         
+         NSCharacterSet* const delimiters = 
+            [NSCharacterSet characterSetWithCharactersInString: @"+-/"];
+         
+         for ( NSUInteger index = 0u; index < stringRange.length; ++index )
          {
-            const unichar nextCharacter = 
-               [locationString characterAtIndex: word.location + word.length++];
-            
-            if ( [delimiters characterIsMember: nextCharacter] )
+            if ( [delimiters characterIsMember: characters[index]] )
             {
-               break;
+               [indices addIndex: index];
             }
          }
       }
    }
-
-   return word;
+    
+   NSCParameterAssert( 
+      !indices.count || indices.lastIndex < locationString.length 
+   );
+   return indices;
 }
 
-static NSString* _safeSubstring( NSString* locationString, NSRange range )
-{
-   NSString* substring = nil;
-
-   if ( range.location + range.length <= locationString.length )
-   {
-      substring = [locationString substringWithRange: range];
-   }
-   
-   return substring;
-}
-
-static BOOL _isTerminatingSubstring( NSString* locationString, NSRange range )
-{
-   NSString* const substring = _safeSubstring( locationString, range );
-   return [substring isEqualToString: @"/"];
-}
-
-static BOOL _validWordLengths( 
-   NSUInteger latitudeWordLength,
-   NSUInteger longitudeWordLength
+static BOOL _validateDelimiters( 
+   NSUInteger stringLength, NSIndexSet* indices 
 )
 {
-   const BOOL degreeFormat = 8u == latitudeWordLength;
-   const BOOL minuteFormat = 10u == latitudeWordLength;
-   const BOOL secondFormat = 12u == latitudeWordLength;
+   BOOL result = NO;
+
+   const BOOL enoughDelimiters = 2u <= indices.count;
+   const BOOL tooManyDelimiters = 4u < indices.count;
+
+   if ( stringLength && enoughDelimiters && !tooManyDelimiters )
+   {
+      const BOOL startsWithDelimiter = 0u == indices.firstIndex;
+      const BOOL endsWithDelimiter = 
+         ( indices.lastIndex + 1u ) == stringLength;
+      
+      result = startsWithDelimiter && endsWithDelimiter;
+   }
+
+   return result;
+}
+
+static NSArray* _scanSubstrings( NSString* locationString )
+{
+   NSMutableArray* words = nil;
+   NSIndexSet* const wordLocations = _findDelimiters( locationString );
+
+   if ( _validateDelimiters( locationString.length, wordLocations ) )
+   {
+      words = [NSMutableArray array];
+      NSUInteger index = wordLocations.firstIndex;
+      NSUInteger nextIndex = [wordLocations indexGreaterThanIndex: index];
+      
+      while ( nextIndex < locationString.length )
+      {
+         const NSRange range = NSMakeRange( index, nextIndex - index );
+         [words addObject: [locationString substringWithRange: range]];
+         index = nextIndex;
+         nextIndex = [wordLocations indexGreaterThanIndex: index];
+      }
+   }
+
+   return words;
+}
+
+#if 0
+static BOOL _validateDegreeFormat( 
+   NSUInteger latitudeDecimalLength, NSUInteger longitudeDecimalLength 
+)
+{
+   const BOOL degreeFormat = 2u == latitudeDecimalLength;
+   const BOOL minuteFormat = 4u == latitudeDecimalLength;
+   const BOOL secondFormat = 6u == latitudeDecimalLength;
    
    const BOOL validLongitude = 
-      longitudeWordLength == ( latitudeWordLength + 1u );
+      longitudeDecimalLength == ( latitudeDecimalLength + 1u );
 
    return ( degreeFormat || minuteFormat || secondFormat ) && validLongitude;
 }
 
-static BOOL _parseLatitude( 
-   NSString* locationString, 
-   NSRange range, 
-   CLLocationDegrees* pLatitude 
-)
+static NSString* _decimalFromString( NSString* numberString )
 {
+   NSScanner* const scanner = [NSScanner scannerWithString: numberString];
+   scanner.charactersToBeSkipped = nil;
+
+   NSCharacterSet* const dotCharacter = 
+      [NSCharacterSet characterSetWithCharactersInString: @"."];
+
+   NSString* decimalString = nil;
+   [scanner scanUpToCharactersFromSet: dotCharacter intoString: &decimalString];
+   return decimalString;
+}
+#endif // 0
+
+static CLLocationCoordinate2D 
+   _parseCoordinate( NSString* latitudeString, NSString* longitudeString )
+{
+   CLLocationCoordinate2D location = kCLLocationCoordinate2DInvalid;
+
    // !!!: implement me
-   return NO;
+   return location;
 }
 
-static BOOL _parseLongitude( 
-   NSString* locationString, 
-   NSRange range, 
-   CLLocationDegrees* pLatitude 
-)
+static BOOL _parseAltitude( NSString* altitudeString )
 {
-   // !!!: implement me
-   return NO;
+   NSScanner* const scanner = [NSScanner scannerWithString: altitudeString];
+   scanner.charactersToBeSkipped = nil;
+   return [scanner scanDouble: NULL];
 }
 
-static BOOL _parseAltitude( 
-   NSString* locationString, 
-   NSRange range 
-)
+static NSString* _substringAtIndex( NSArray* substrings, NSUInteger index )
 {
-   // !!!: implement me
-   return YES;
+   NSString* substring = nil;
+   
+   if ( index < substrings.count )
+   {
+      substring = [substrings objectAtIndex: index];
+   }
+   
+   return substring;
 }
 
 CLLocationCoordinate2D ISO6709Location_coordinateFromString( 
    NSString* locationString 
 )
 {
-   const NSRange startingRange = { 0 };
-   const NSRange latitudeStringRange = 
-      _scanNextWord( locationString, startingRange );
-
-   const NSRange longitudeStringRange = 
-      _scanNextWord( locationString, latitudeStringRange );
-   
-   NSRange altitudeStringRange = { 0 };
-   NSRange terminatorStringRange = 
-      _scanNextWord( locationString, longitudeStringRange );
-
-   if ( !_isTerminatingSubstring( locationString, terminatorStringRange ) )
-   {
-      altitudeStringRange = terminatorStringRange;
-      terminatorStringRange = 
-         _scanNextWord( locationString, terminatorStringRange );
-   }
-   
-   const BOOL validWordLengths = _validWordLengths( 
-      latitudeStringRange.length, longitudeStringRange.length
-   );
-   const BOOL validAltitude = 
-      _parseAltitude( locationString, altitudeStringRange );
-   const BOOL validTerminator = 
-      _isTerminatingSubstring( locationString, terminatorStringRange );
-   
    CLLocationCoordinate2D location = kCLLocationCoordinate2DInvalid;
    
-   if ( validWordLengths && validAltitude && validTerminator )
+   if ( [locationString hasSuffix: @"/"] )
    {
-      CLLocationDegrees latitude = 0.;
-      CLLocationDegrees longitude = 0.;
+      NSArray* const substrings = _scanSubstrings( locationString );
+      NSString* const latitudeString = _substringAtIndex( substrings, 0u );
+      NSString* const longitudeString = _substringAtIndex( substrings, 1u );
+      NSString* const altitudeString = _substringAtIndex( substrings, 2u );
       
-      const BOOL validLatitude = 
-         _parseLatitude( locationString, latitudeStringRange, &latitude );
-      const BOOL validLongitude = 
-         _parseLongitude( locationString, longitudeStringRange, &longitude );
-   
-      if ( validLatitude && validLongitude )
+      if ( _parseAltitude( altitudeString ) )
       {
-         location = CLLocationCoordinate2DMake( latitude, longitude );
+         location = _parseCoordinate( latitudeString, longitudeString );
       }
-   } 
+   }
    
    return location;
 }
