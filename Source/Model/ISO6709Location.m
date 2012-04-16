@@ -8,13 +8,12 @@
 //
 
 #import "ISO6709Location.h"
+#import <Foundation/NSCharacterSet.h>
+#import <Foundation/NSScanner.h>
 
 
 // +DD.DDDD+DDD.DDDD/ (eg +12.3450-098.7650/)
 static NSString* const _degreeDegreeFormat = @"%+08.4f%+09.4f/";
-static const NSUInteger _minimumFormatLength = 18u;
-static NSString* const _formatSuffix = @"/";
-
 
 NSString* ISO6709Location_stringFromCoordinate( 
    CLLocationCoordinate2D coordinate 
@@ -31,19 +30,106 @@ NSString* ISO6709Location_stringFromCoordinate(
    return locationString;
 }
 
+
+#pragma mark -
+
+static NSRange _parseNextWord( NSString* locationString, NSRange previousWord )
+{
+   // !!!: implement me
+   return NSMakeRange( 0u, 0u );
+}
+
+static BOOL _isTerminatingSubstring( NSString* locationString, NSRange range )
+{
+   // !!!: implement me
+   return NO;
+}
+
+static BOOL _validWordLengths( 
+   NSUInteger latitudeWordLength,
+   NSUInteger longitudeWordLength
+)
+{
+   // !!!: implement me
+   return NO;
+}
+
+static BOOL _parseLatitude( 
+   NSString* locationString, 
+   NSRange range, 
+   CLLocationDegrees* pLatitude 
+)
+{
+   // !!!: implement me
+   return NO;
+}
+
+static BOOL _parseLongitude( 
+   NSString* locationString, 
+   NSRange range, 
+   CLLocationDegrees* pLatitude 
+)
+{
+   // !!!: implement me
+   return NO;
+}
+
+static BOOL _parseAltitude( 
+   NSString* locationString, 
+   NSRange range 
+)
+{
+   // !!!: implement me
+   return YES;
+}
+
 CLLocationCoordinate2D ISO6709Location_coordinateFromString( 
    NSString* locationString 
 )
 {
    CLLocationCoordinate2D location = kCLLocationCoordinate2DInvalid;
 
-   const BOOL stringHasRequiredSuffix = [locationString hasSuffix: _formatSuffix];
-   const BOOL stringIsTooShort = locationString.length < _minimumFormatLength;
+   NSRange parsedRange = { 0 };
+   
+   parsedRange = _parseNextWord( locationString, parsedRange );
+   const NSRange latitudeStringRange = parsedRange;
 
-   if ( stringHasRequiredSuffix && !stringIsTooShort )
+   parsedRange = _parseNextWord( locationString, parsedRange );
+   const NSRange longitudeStringRange = parsedRange;
+   
+   NSRange altitudeStringRange = { 0 };
+   parsedRange = _parseNextWord( locationString, parsedRange );
+   NSRange terminatorStringRange = parsedRange;
+
+   if ( !_isTerminatingSubstring( locationString, terminatorStringRange ) )
    {
-      location = CLLocationCoordinate2DMake( 0., 0. );
+      altitudeStringRange = terminatorStringRange;
+      terminatorStringRange = _parseNextWord( locationString, parsedRange );
    }
+   
+   const BOOL validInputLengths = _validWordLengths( 
+      latitudeStringRange.length, longitudeStringRange.length
+   );
+   const BOOL validAltitidue = 
+      _parseAltitude( locationString, altitudeStringRange );
+   const BOOL validTerminator = 
+      _isTerminatingSubstring( locationString, terminatorStringRange );
+   
+   if ( validInputLengths && validAltitidue && validTerminator )
+   {
+      CLLocationDegrees latitude = 0.;
+      CLLocationDegrees longitude = 0.;
+      
+      const BOOL validLatitude = 
+         _parseLatitude( locationString, latitudeStringRange, &latitude );
+      const BOOL validLongitidue = 
+         _parseLongitude( locationString, longitudeStringRange, &longitude );
+   
+      if ( validLatitude && validLongitidue )
+      {
+         location = CLLocationCoordinate2DMake( latitude, longitude );
+      }
+   } 
    
    return location;
 }
