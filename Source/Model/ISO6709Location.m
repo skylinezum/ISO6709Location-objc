@@ -4,12 +4,11 @@
 //  Created by Otto Schnurr on 4/13/12.
 //  Copyright 2012
 //
-//  Much of this was transcribed from http://coordinate.codeplex.com
+//  references: http://coordinate.codeplex.com
 //
 
 #import "ISO6709Location.h"
 #import <Foundation/NSCharacterSet.h>
-#import <Foundation/NSScanner.h>
 
 
 // +DD.DDDD+DDD.DDDD/ (eg +12.3450-098.7650/)
@@ -33,10 +32,37 @@ NSString* ISO6709Location_stringFromCoordinate(
 
 #pragma mark -
 
-static NSRange _parseNextWord( NSString* locationString, NSRange previousWord )
+// Returns zero length on failure.
+static NSRange _scanNextWord( NSString* locationString, NSRange previousWord )
 {
-   // !!!: implement me
-   return NSMakeRange( 0u, 0u );
+   NSRange word = NSMakeRange( previousWord.location + previousWord.length, 0u );
+
+   if ( word.location + word.length < locationString.length )
+   {
+      NSCharacterSet* const delimiters = 
+         [NSCharacterSet characterSetWithCharactersInString: @"+-/"];
+      const unichar firstCharacter = 
+         [locationString characterAtIndex: word.location + word.length];
+      
+      // Each valid word starts with a delimiter.
+      if ( [delimiters characterIsMember: firstCharacter] )
+      {
+         word.length++;
+      
+         while ( word.location + word.length < locationString.length )
+         {
+            const unichar nextCharacter = 
+               [locationString characterAtIndex: word.location + word.length++];
+            
+            if ( [delimiters characterIsMember: nextCharacter] )
+            {
+               break;
+            }
+         }
+      }
+   }
+
+   return word;
 }
 
 static BOOL _isTerminatingSubstring( NSString* locationString, NSRange range )
@@ -87,45 +113,45 @@ CLLocationCoordinate2D ISO6709Location_coordinateFromString(
    NSString* locationString 
 )
 {
-   CLLocationCoordinate2D location = kCLLocationCoordinate2DInvalid;
+   const NSRange startingRange = { 0 };
+   const NSRange latitudeStringRange = 
+      _scanNextWord( locationString, startingRange );
 
-   NSRange parsedRange = { 0 };
-   
-   parsedRange = _parseNextWord( locationString, parsedRange );
-   const NSRange latitudeStringRange = parsedRange;
-
-   parsedRange = _parseNextWord( locationString, parsedRange );
-   const NSRange longitudeStringRange = parsedRange;
+   const NSRange longitudeStringRange = 
+      _scanNextWord( locationString, latitudeStringRange );
    
    NSRange altitudeStringRange = { 0 };
-   parsedRange = _parseNextWord( locationString, parsedRange );
-   NSRange terminatorStringRange = parsedRange;
+   NSRange terminatorStringRange = 
+      _scanNextWord( locationString, longitudeStringRange );
 
    if ( !_isTerminatingSubstring( locationString, terminatorStringRange ) )
    {
       altitudeStringRange = terminatorStringRange;
-      terminatorStringRange = _parseNextWord( locationString, parsedRange );
+      terminatorStringRange = 
+         _scanNextWord( locationString, terminatorStringRange );
    }
    
-   const BOOL validInputLengths = _validWordLengths( 
+   const BOOL validWordLengths = _validWordLengths( 
       latitudeStringRange.length, longitudeStringRange.length
    );
-   const BOOL validAltitidue = 
+   const BOOL validAltitude = 
       _parseAltitude( locationString, altitudeStringRange );
    const BOOL validTerminator = 
       _isTerminatingSubstring( locationString, terminatorStringRange );
    
-   if ( validInputLengths && validAltitidue && validTerminator )
+   CLLocationCoordinate2D location = kCLLocationCoordinate2DInvalid;
+   
+   if ( validWordLengths && validAltitude && validTerminator )
    {
       CLLocationDegrees latitude = 0.;
       CLLocationDegrees longitude = 0.;
       
       const BOOL validLatitude = 
          _parseLatitude( locationString, latitudeStringRange, &latitude );
-      const BOOL validLongitidue = 
+      const BOOL validLongitude = 
          _parseLongitude( locationString, longitudeStringRange, &longitude );
    
-      if ( validLatitude && validLongitidue )
+      if ( validLatitude && validLongitude )
       {
          location = CLLocationCoordinate2DMake( latitude, longitude );
       }
