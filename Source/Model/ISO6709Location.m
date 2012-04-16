@@ -4,7 +4,7 @@
 //  Created by Otto Schnurr on 4/13/12.
 //  Copyright 2012
 //
-//  references: http://coordinate.codeplex.com
+//  reference: http://coordinate.codeplex.com
 //
 
 #import "ISO6709Location.h"
@@ -65,10 +65,22 @@ static NSRange _scanNextWord( NSString* locationString, NSRange previousWord )
    return word;
 }
 
+static NSString* _safeSubstring( NSString* locationString, NSRange range )
+{
+   NSString* substring = nil;
+
+   if ( range.location + range.length <= locationString.length )
+   {
+      substring = [locationString substringWithRange: range];
+   }
+   
+   return substring;
+}
+
 static BOOL _isTerminatingSubstring( NSString* locationString, NSRange range )
 {
-   // !!!: implement me
-   return NO;
+   NSString* const substring = _safeSubstring( locationString, range );
+   return [substring isEqualToString: @"/"];
 }
 
 static BOOL _validWordLengths( 
@@ -76,8 +88,14 @@ static BOOL _validWordLengths(
    NSUInteger longitudeWordLength
 )
 {
-   // !!!: implement me
-   return NO;
+   const BOOL degreeFormat = 8u == latitudeWordLength;
+   const BOOL minuteFormat = 10u == latitudeWordLength;
+   const BOOL secondFormat = 12u == latitudeWordLength;
+   
+   const BOOL validLongitude = 
+      longitudeWordLength == ( latitudeWordLength + 1u );
+
+   return ( degreeFormat || minuteFormat || secondFormat ) && validLongitude;
 }
 
 static BOOL _parseLatitude( 
