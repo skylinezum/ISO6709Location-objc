@@ -114,7 +114,26 @@ static NSArray* _scanSubstrings( NSString* locationString )
    return words;
 }
 
-#if 0
+
+#pragma mark -
+
+
+static NSUInteger _decimalLengthFromString( NSString* degreeString )
+{
+   NSUInteger length = 0u;
+   
+   NSCharacterSet* const digits = [NSCharacterSet decimalDigitCharacterSet];
+   const NSRange decimalRange = [degreeString rangeOfCharacterFromSet: digits];
+   const BOOL validSign = decimalRange.location == 1u;
+   
+   if ( validSign )
+   {
+      length = decimalRange.length;
+   }
+   
+   return length;
+}
+
 static BOOL _validateDegreeFormat( 
    NSUInteger latitudeDecimalLength, NSUInteger longitudeDecimalLength 
 )
@@ -129,26 +148,48 @@ static BOOL _validateDegreeFormat(
    return ( degreeFormat || minuteFormat || secondFormat ) && validLongitude;
 }
 
-static NSString* _decimalFromString( NSString* numberString )
+static BOOL _parseDegrees( NSString* degreeString, CLLocationDegrees* pDegrees )
 {
-   NSScanner* const scanner = [NSScanner scannerWithString: numberString];
-   scanner.charactersToBeSkipped = nil;
-
-   NSCharacterSet* const dotCharacter = 
-      [NSCharacterSet characterSetWithCharactersInString: @"."];
-
-   NSString* decimalString = nil;
-   [scanner scanUpToCharactersFromSet: dotCharacter intoString: &decimalString];
-   return decimalString;
+   BOOL result = NO;
+   CLLocationDegrees degrees = 0.;
+   
+   // !!!: implement me
+   
+   if ( result && pDegrees )
+   {
+      *pDegrees = degrees;
+   }
+   
+   return result;
 }
-#endif // 0
 
 static CLLocationCoordinate2D 
    _parseCoordinate( NSString* latitudeString, NSString* longitudeString )
 {
    CLLocationCoordinate2D location = kCLLocationCoordinate2DInvalid;
 
-   // !!!: implement me
+   const NSUInteger latitudeDecimalLength = 
+      _decimalLengthFromString( latitudeString );
+   const NSUInteger longitudeDecimalLength = 
+      _decimalLengthFromString( longitudeString );
+   const BOOL consistentFormat = 
+      _validateDegreeFormat( latitudeDecimalLength, longitudeDecimalLength );
+
+   if ( consistentFormat )
+   {
+      CLLocationDegrees latitude = 0.;
+      CLLocationDegrees longitude = 0.;
+
+      const BOOL goodParse = 
+         _parseDegrees( latitudeString, &latitude ) &&
+         _parseDegrees( longitudeString, &longitude );
+
+      if ( goodParse )
+      {
+         location = CLLocationCoordinate2DMake( latitude, longitude );
+      }
+   }
+
    return location;
 }
 
@@ -170,6 +211,10 @@ static NSString* _substringAtIndex( NSArray* substrings, NSUInteger index )
    
    return substring;
 }
+
+
+#pragma mark -
+
 
 CLLocationCoordinate2D ISO6709Location_coordinateFromString( 
    NSString* locationString 
