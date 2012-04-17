@@ -79,10 +79,16 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
    STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
 }
 
-- (void)test_stringWithAltitude_parses
+- (void)test_stringWithValidAltitude_parses
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650+123.456/" );
    STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
+}
+
+- (void)test_stringWithInvalidAltitude_doesNotParse
+{
+   const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650+up.high/" );
+   STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
 }
 
 @end
