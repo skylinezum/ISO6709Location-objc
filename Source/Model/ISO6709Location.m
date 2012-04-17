@@ -54,10 +54,10 @@ static NSString* _scanWord( NSScanner* scanner, NSUInteger minimumIntegerLength 
    
    const BOOL validScan = 
       [scanner scanCharactersFromSet: signCharacters intoString: &sign] &&
-      [scanner scanCharactersFromSet: digits intoString: &integer] &&
-      [scanner scanCharactersFromSet: dotCharacter intoString: NULL];
+      [scanner scanCharactersFromSet: digits intoString: &integer];
       
    // fraction is optional
+   [scanner scanCharactersFromSet: dotCharacter intoString: NULL];
    [scanner scanCharactersFromSet: digits intoString: &fraction];
 
    if ( validScan && integer.length >= minimumIntegerLength )

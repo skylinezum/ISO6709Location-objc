@@ -91,4 +91,10 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
    STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
 }
 
+- (void)test_stringWithoutDots_parses
+{
+   const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12-098/" );
+   STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
+}
+
 @end
