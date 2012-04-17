@@ -53,7 +53,7 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
    STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
 }
 
-- (void)DISABLED_test_zeroString_parsesToZeroCoordinate
+- (void)test_zeroString_parsesToZeroCoordinate
 {
    const CLLocationCoordinate2D parsedCoordinate = ISO6709Location_coordinateFromString( @"+00.0000+000.0000/" );
    const CLLocationCoordinate2D expectedCoordinate = { 0 };
@@ -66,7 +66,7 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
    STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
 }
 
-- (void)DISABLED_test_typicalString_parsesToTypicalCoordinate
+- (void)test_typicalString_parsesToTypicalCoordinate
 {
    const CLLocationCoordinate2D parsedCoordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650/" );
    const CLLocationCoordinate2D expectedCoordinate = CLLocationCoordinate2DMake( 12.345, -98.765 );
