@@ -4,7 +4,9 @@
 //  Created by Otto Schnurr on 4/13/12.
 //  Copyright 2012
 //
-//  reference: http://coordinate.codeplex.com
+//  reference:
+//     http://www.w3.org/2005/Incubator/geo/Wiki/LatitudeLongitudeAltitude
+//     http://coordinate.codeplex.com
 //
 
 #import "ISO6709Location.h"
@@ -48,15 +50,17 @@ static NSString* _scanWord( NSScanner* scanner, NSUInteger minimumIntegerLength 
    NSString* word = nil;
    NSString* sign = nil;
    NSString* integer = nil;
-   NSString* fraction = nil;
+   NSString* fraction = @"";
    
-   if (
+   const BOOL parsedInteger = 
       [scanner scanCharactersFromSet: signCharacters intoString: &sign] &&
       [scanner scanCharactersFromSet: digits intoString: &integer] &&
-      [scanner scanCharactersFromSet: dotCharacter intoString: NULL] &&
-      [scanner scanCharactersFromSet: digits intoString: &fraction] &&
-      minimumIntegerLength <= integer.length
-   )
+      [scanner scanCharactersFromSet: dotCharacter intoString: NULL];
+      
+   // fraction is optional
+   [scanner scanCharactersFromSet: digits intoString: &fraction];
+
+   if ( parsedInteger && integer.length >= minimumIntegerLength )
    {
       word = [NSString stringWithFormat: @"%@%@.%@", sign, integer, fraction];
    }
@@ -135,17 +139,24 @@ static BOOL _parseDegrees( NSString* degreeString, CLLocationDegrees* pDegrees )
 
 static NSUInteger _integerLengthForFloatString( NSString* floatString )
 {
-   NSCParameterAssert( 
-      [floatString hasPrefix: @"+"] || [floatString hasPrefix: @"-"] 
-   );
-   
-   NSCharacterSet* const digits = [NSCharacterSet decimalDigitCharacterSet];
-   NSScanner* const scanner = [NSScanner scannerWithString: floatString];
-   scanner.charactersToBeSkipped = nil;
-   scanner.scanLocation = _integerLocation;
-   [scanner scanCharactersFromSet: digits intoString: NULL];
+   NSUInteger length = 0u;
 
-   return scanner.scanLocation - _integerLocation;
+   if ( floatString.length )
+   {
+      NSCParameterAssert( 
+         [floatString hasPrefix: @"+"] || [floatString hasPrefix: @"-"] 
+      );
+      
+      NSCharacterSet* const digits = [NSCharacterSet decimalDigitCharacterSet];
+      NSScanner* const scanner = [NSScanner scannerWithString: floatString];
+      scanner.charactersToBeSkipped = nil;
+      scanner.scanLocation = _integerLocation;
+      [scanner scanCharactersFromSet: digits intoString: NULL];
+
+      length = scanner.scanLocation - _integerLocation;
+   }
+   
+   return length;
 }
 
 static BOOL 

@@ -47,7 +47,7 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
 
 
 #pragma mark String Parsing Tests
-- (void)test_nilString_parsesToInvalidCoordinate
+- (void)test_nilString_doesNotParse
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( nil );
    STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
@@ -60,7 +60,7 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
    STAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ), nil );
 }
 
-- (void)test_stringWithoutSlash_parsesToInvalidCoordinate
+- (void)test_stringWithoutSlash_doesNotParse
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+00.0000+000.0000" );
    STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
@@ -71,6 +71,18 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
    const CLLocationCoordinate2D parsedCoordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650/" );
    const CLLocationCoordinate2D expectedCoordinate = CLLocationCoordinate2DMake( 12.345, -98.765 );
    STAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ), nil );
+}
+
+- (void)test_stringWithoutFractions_parses
+{
+   const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12.-098./" );
+   STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
+}
+
+- (void)test_stringWithAltitude_parses
+{
+   const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650+123.456/" );
+   STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
 }
 
 @end
