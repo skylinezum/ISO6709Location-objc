@@ -19,7 +19,7 @@ NSString* ISO6709Location_stringFromCoordinate(
    CLLocationCoordinate2D coordinate 
 )
 {
-   // +DD.DDDD+DDD.DDDD/ (eg +12.3450-098.7650/)
+   // eg: +12.3450-098.7650/
    static NSString* const _degreeDegreeFormat = @"%+08.4f%+09.4f/";
    
    NSString* locationString = nil;
@@ -52,7 +52,7 @@ static NSString* _scanWord( NSScanner* scanner, NSUInteger minimumIntegerLength 
    NSString* integer = nil;
    NSString* fraction = @"";
    
-   const BOOL parsedInteger = 
+   const BOOL validScan = 
       [scanner scanCharactersFromSet: signCharacters intoString: &sign] &&
       [scanner scanCharactersFromSet: digits intoString: &integer] &&
       [scanner scanCharactersFromSet: dotCharacter intoString: NULL];
@@ -60,7 +60,7 @@ static NSString* _scanWord( NSScanner* scanner, NSUInteger minimumIntegerLength 
    // fraction is optional
    [scanner scanCharactersFromSet: digits intoString: &fraction];
 
-   if ( parsedInteger && integer.length >= minimumIntegerLength )
+   if ( validScan && integer.length >= minimumIntegerLength )
    {
       word = [NSString stringWithFormat: @"%@%@.%@", sign, integer, fraction];
    }
@@ -137,7 +137,7 @@ static BOOL _parseDegrees( NSString* degreeString, CLLocationDegrees* pDegrees )
    return result;
 }
 
-static NSUInteger _integerLengthForFloatString( NSString* floatString )
+static NSUInteger _integerLengthForDecimalString( NSString* floatString )
 {
    NSUInteger length = 0u;
 
@@ -163,9 +163,9 @@ static BOOL
    _verifyDegreeFormat( NSString* latitudeString, NSString* longitudeString )
 {
    const NSUInteger latitudeIntegerLength =
-      _integerLengthForFloatString( latitudeString );
+      _integerLengthForDecimalString( latitudeString );
    const NSUInteger longitudeIntegerLength =
-      _integerLengthForFloatString( longitudeString );
+      _integerLengthForDecimalString( longitudeString );
 
    const BOOL degreeFormat = 2u == latitudeIntegerLength;
    const BOOL minuteFormat = 4u == latitudeIntegerLength;
