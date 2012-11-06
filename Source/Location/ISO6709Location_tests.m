@@ -1,8 +1,12 @@
 //
 //  ISO6709Location_tests.m
 //
-//  Created by Otto Schnurr on 4/13/2012.
-//  Copyright 2012
+//  Copyright (c) 2012, TechSmith Corporation
+//  All rights reserved.
+//
+//  BSD Simplified License
+//     file: ./LICENSE.txt
+//     http://www.opensource.org/licenses/BSD-3-Clause
 //
 
 #import "ISO6709Location.h"

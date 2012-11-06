@@ -1,12 +1,16 @@
 //
 //  ISO6709Location.m
 //
-//  Created by Otto Schnurr on 4/13/12.
-//  Copyright 2012
-//
 //  reference:
 //     http://www.w3.org/2005/Incubator/geo/Wiki/LatitudeLongitudeAltitude
 //     http://coordinate.codeplex.com
+//
+//  Copyright (c) 2012, TechSmith Corporation
+//  All rights reserved.
+//
+//  BSD Simplified License
+//     file: ./LICENSE.txt
+//     http://www.opensource.org/licenses/BSD-3-Clause
 //
 
 #import "ISO6709Location.h"
