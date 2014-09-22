@@ -10,7 +10,7 @@
 //
 
 #import "ISO6709Location.h"
-#import <SenTestingKit/SenTestingKit.h>
+#import <XCTest/XCTest.h>
 
 
 static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate2D b )
@@ -22,7 +22,7 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
 #pragma mark -
 
 
-@interface ISO6709Location_tests : SenTestCase
+@interface ISO6709Location_tests : XCTestCase
 @end
 
 
@@ -32,21 +32,21 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
 - (void)test_invalidCoordinate_generatesNilString
 {
    NSString* const locationString = ISO6709Location_stringFromCoordinate( kCLLocationCoordinate2DInvalid );
-   STAssertNil( locationString, nil );
+   XCTAssertNil( locationString);
 }
 
 - (void)test_zeroCoordinate_generatesZeroString
 {
    const CLLocationCoordinate2D coordinate = { 0 };
    NSString* const locationString = ISO6709Location_stringFromCoordinate( coordinate );
-   STAssertEqualObjects( locationString, @"+00.0000+000.0000/", nil );
+   XCTAssertEqualObjects( locationString, @"+00.0000+000.0000/");
 }
 
 - (void)test_typicalCoordinate_generatesTypicalString
 {
    const CLLocationCoordinate2D coordinate = CLLocationCoordinate2DMake( 12.345, -98.765 );
    NSString* const locationString = ISO6709Location_stringFromCoordinate( coordinate );
-   STAssertEqualObjects( locationString, @"+12.3450-098.7650/", nil );
+   XCTAssertEqualObjects( locationString, @"+12.3450-098.7650/");
 }
 
 
@@ -54,51 +54,51 @@ static BOOL _coordinatesAreEqual( CLLocationCoordinate2D a, CLLocationCoordinate
 - (void)test_nilString_doesNotParse
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( nil );
-   STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
+   XCTAssertFalse( CLLocationCoordinate2DIsValid( coordinate ));
 }
 
 - (void)test_zeroString_parsesToZeroCoordinate
 {
    const CLLocationCoordinate2D parsedCoordinate = ISO6709Location_coordinateFromString( @"+00.0000+000.0000/" );
    const CLLocationCoordinate2D expectedCoordinate = { 0 };
-   STAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ), nil );
+   XCTAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ));
 }
 
 - (void)test_stringWithoutSlash_doesNotParse
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+00.0000+000.0000" );
-   STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
+   XCTAssertFalse( CLLocationCoordinate2DIsValid( coordinate ));
 }
 
 - (void)test_typicalString_parsesToTypicalCoordinate
 {
    const CLLocationCoordinate2D parsedCoordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650/" );
    const CLLocationCoordinate2D expectedCoordinate = CLLocationCoordinate2DMake( 12.345, -98.765 );
-   STAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ), nil );
+   XCTAssertTrue( _coordinatesAreEqual( parsedCoordinate, expectedCoordinate ));
 }
 
 - (void)test_stringWithoutFractions_parses
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12.-098./" );
-   STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
+   XCTAssertTrue( CLLocationCoordinate2DIsValid( coordinate ));
 }
 
 - (void)test_stringWithValidAltitude_parses
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650+123.456/" );
-   STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
+   XCTAssertTrue( CLLocationCoordinate2DIsValid( coordinate ));
 }
 
 - (void)test_stringWithInvalidAltitude_doesNotParse
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12.3450-098.7650+up.high/" );
-   STAssertFalse( CLLocationCoordinate2DIsValid( coordinate ), nil );
+   XCTAssertFalse( CLLocationCoordinate2DIsValid( coordinate ));
 }
 
 - (void)test_stringWithoutDots_parses
 {
    const CLLocationCoordinate2D coordinate = ISO6709Location_coordinateFromString( @"+12-098/" );
-   STAssertTrue( CLLocationCoordinate2DIsValid( coordinate ), nil );
+   XCTAssertTrue( CLLocationCoordinate2DIsValid( coordinate ));
 }
 
 @end
